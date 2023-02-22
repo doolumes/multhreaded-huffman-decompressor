@@ -27,7 +27,7 @@ struct HuffmanNode {
         this->left = nullptr;
         this->right = nullptr;
     }
-    
+
     //returns code based on position of node on Huffman Tree
     char decode(std::string str){
         if (str == "")
@@ -65,28 +65,31 @@ struct HuffmanNodeComparison{
    }
 };
 
-//creates the codes for each node in Huffman tree
-void create_huffman_code(HuffmanNode* root, std::string code){
-    if(root == nullptr)
-        return;
-    if(root->left == nullptr && root->right == nullptr)
-        root->code = code;
-    if(root->left)
-        create_huffman_code(root->left, code + '0');
-    if(root->right)
-        create_huffman_code(root->right, code + '1');
+//args function for pthread_create; adds decoded characters to final output array based on their positions
+void *code_to_string(void *decompress_info_void_ptr){
+    decompress_info *decompress_info_ptr = (decompress_info*) decompress_info_void_ptr;
+    /*
+    Root node of the Huffman Tree is used to determine the character it is
+    based on the code string passed to struct in the parameter of this function that was
+    passed in by our pthread_create function in our decompress function
+    */
+    char c = decompress_info_ptr->root->decode(decompress_info_ptr->str);
+
+    for(int i = 0; i < decompress_info_ptr->positions.size(); i++)
+        /*stores the decompressed character (c) a total of (size of positions vector) times
+        in our output array which was created in and therefore accessible by the main thread*/
+        decompress_info_ptr->output[decompress_info_ptr->positions[i]] = c;
 }
 
-//prints nodes of Huffman tree in preorder traversal
-void print(HuffmanNode* root){
-    if(root == nullptr)
-        return;
-    if(root->c)
-        std::cout << "Symbol: " << root->c << ", Frequency: " << root->freq << ", Code: " << root->code << std::endl;
-    print(root->left);
-    print(root->right);
-}
+//converts the output array to a string that can be printed
+std::string convertToString(char* a, int size){
+    int i;
+    std::string s = "";
 
+    for (i = 0; i < size; i++)
+        s = s + a[i];
+    return s;
+}
 
 //uses algorithm to build Huffman tree based on the nodes in the vector passed in parameter list
 void build_huffman_tree(std::vector<HuffmanNode*> &huffmanNodeVector){
@@ -131,34 +134,30 @@ void build_huffman_tree(std::vector<HuffmanNode*> &huffmanNodeVector){
     input.close();
 }
 
-//args function for pthread_create; adds decoded characters to final output array based on their positions
-void *code_to_string(void *decompress_info_void_ptr){
-    decompress_info *decompress_info_ptr = (decompress_info*) decompress_info_void_ptr;
-    /*
-    Root node of the Huffman Tree is used to determine the character it is
-    based on the code string passed to struct in the parameter of this function that was
-    passed in by our pthread_create function in our decompress function
-    */
-    char c = decompress_info_ptr->root->decode(decompress_info_ptr->str);
-
-    for(int i = 0; i < decompress_info_ptr->positions.size(); i++)
-        /*stores the decompressed character (c) a total of (size of positions vector) times
-        in our output array which was created in and therefore accessible by the main thread*/
-        decompress_info_ptr->output[decompress_info_ptr->positions[i]] = c;
+//creates the codes for each node in Huffman tree
+void create_huffman_code(HuffmanNode* root, std::string code){
+    if(root == nullptr)
+        return;
+    if(root->left == nullptr && root->right == nullptr)
+        root->code = code;
+    if(root->left)
+        create_huffman_code(root->left, code + '0');
+    if(root->right)
+        create_huffman_code(root->right, code + '1');
 }
 
-//converts the output array to a string that can be printed
-std::string convertToString(char* a, int size){
-    int i;
-    std::string s = "";
-
-    for (i = 0; i < size; i++)
-        s = s + a[i];
-    return s;
+//prints nodes of Huffman tree in preorder traversal
+void print_huffman_tree(HuffmanNode* root){
+    if(root == nullptr)
+        return;
+    if(root->c)
+        std::cout << "Symbol: " << root->c << ", Frequency: " << root->freq << ", Code: " << root->code << std::endl;
+    print_huffman_tree(root->left);
+    print_huffman_tree(root->right);
 }
 
 //compressed file is decoded using multi-threaded approach
-void decompress(HuffmanNode* huffmanNode){
+void decompress_huffman_code(HuffmanNode* huffmanNode){
     std::ifstream compressed;
     std::string line;
 
@@ -234,8 +233,8 @@ int main(){
     //2. Huffman codes are created from the generated tree
     create_huffman_code(huffmanNodeVector[0], "");
     //3. Huffman codes are printed from the generated tree
-    print(huffmanNodeVector[0]);
+    print_huffman_tree(huffmanNodeVector[0]);
     //4. compressed file is decompressed using the codes of each character in the tree; implemented with POSIX threads
-    decompress(huffmanNodeVector[0]);
+    decompress_huffman_code(huffmanNodeVector[0]);
     return 0;
 }
