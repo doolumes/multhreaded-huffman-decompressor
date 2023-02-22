@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 struct HuffmanNode {
+    
     char c;
     int freq;
     std::string code;
@@ -20,6 +21,7 @@ struct HuffmanNode {
     HuffmanNode* right ;
 
     HuffmanNode(int freq, char c = '\0'){
+        
         this->c = c;
         this->freq = freq;
         this->left = nullptr;
@@ -27,6 +29,7 @@ struct HuffmanNode {
     }
 
     char decode(std::string str){
+        
         if (str == "")
             return c;
         else{
@@ -39,6 +42,7 @@ struct HuffmanNode {
 };
 
 struct decompress_info{
+    
     HuffmanNode* root;
     std::string str;
     std::vector<int> positions;
@@ -53,10 +57,9 @@ struct decompress_info{
 };
 
 
-struct HuffmanNodeComparison
-{
-   bool operator()( const HuffmanNode* a, const HuffmanNode* b ) const
-   {
+struct HuffmanNodeComparison{
+    
+   bool operator()( const HuffmanNode* a, const HuffmanNode* b ) const{
         if( a->freq != b->freq)
             return ( a->freq > b->freq);
         return ( a->c > b->c);
@@ -64,6 +67,7 @@ struct HuffmanNodeComparison
 };
 
 void create_huffman_code(HuffmanNode* root, std::string code){
+    
     if(root == nullptr)
         return;
     if(root->left == nullptr && root->right == nullptr)
@@ -72,10 +76,10 @@ void create_huffman_code(HuffmanNode* root, std::string code){
         create_huffman_code(root->left, code + '0');
     if(root->right)
         create_huffman_code(root->right, code + '1');
-
 }
 
 void print(HuffmanNode* root){
+    
     if(root == nullptr)
         return;
     if(root->c)
@@ -96,10 +100,12 @@ void build_huffman_tree(std::vector<HuffmanNode*> &huffmanNodeVector){
     input.open(inputFile);
 
     while(getline(input, line)){
+        
         c = line.at(0);
         freq = stoi(line.substr(2));
         huffmanNodeVector.push_back(new HuffmanNode(freq ,c));
     }
+    
     sort(huffmanNodeVector.begin(), huffmanNodeVector.end(), HuffmanNodeComparison());
 
     while(huffmanNodeVector.size() > 1){
@@ -124,24 +130,26 @@ void build_huffman_tree(std::vector<HuffmanNode*> &huffmanNodeVector){
 
 
 void *code_to_string(void *decompress_info_void_ptr){
+    
     decompress_info *decompress_info_ptr = (decompress_info*) decompress_info_void_ptr;
     char c = decompress_info_ptr->root->decode(decompress_info_ptr->str);
-    for(int i = 0; i < decompress_info_ptr->positions.size(); i++){
+    
+    for(int i = 0; i < decompress_info_ptr->positions.size(); i++)
         decompress_info_ptr->output[decompress_info_ptr->positions[i]] = c;
-    }
 }
 
-std::string convertToString(char* a, int size)
-{
+std::string convertToString(char* a, int size){
+    
     int i;
     std::string s = "";
-    for (i = 0; i < size; i++) {
+    
+    for (i = 0; i < size; i++)
         s = s + a[i];
-    }
     return s;
 }
 
 void decompress(HuffmanNode* huffmanNode){
+    
     std::ifstream compressed;
     std::string line;
 
@@ -189,7 +197,7 @@ void decompress(HuffmanNode* huffmanNode){
 }
 
 int main(){
-
+    
     std::vector<HuffmanNode*> huffmanNodeVector;
     build_huffman_tree(huffmanNodeVector);
     create_huffman_code(huffmanNodeVector[0], "");
