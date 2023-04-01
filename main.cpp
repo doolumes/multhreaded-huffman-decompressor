@@ -218,8 +218,10 @@ void decompress_huffman_code(HuffmanNode* huffmanNode){
     }
 
     //joining threads together after their processes are finished
-    for(int i = 0; i < tid.size(); i++)
+    for(int i = 0; i < tid.size(); i++){
         pthread_join(tid[i], NULL);
+        delete array_of_decompress_info_structs[i];
+    }
     /*After threads mutate the output array,
     and are joined, the original message is printed after*/
     std::cout << "Original message: " << convertToString(output, huffmanNode->freq) << std::endl;
