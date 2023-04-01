@@ -166,7 +166,7 @@ void decompress_huffman_code(HuffmanNode* huffmanNode){
     std::cin >> compressedFile;
     compressed.open(compressedFile);
 
-    char output[huffmanNode->freq];
+    char *output = new char[huffmanNode->freq];
     //list of args for our pthread_create function
     static std::vector<decompress_info*> array_of_decompress_info_structs;
     //list of threads since there will be N threads
@@ -206,7 +206,6 @@ void decompress_huffman_code(HuffmanNode* huffmanNode){
             std::vector<int> positions;
             char* output;
         }
-
         (1) a pointer to the root node of the Huffman tree
         (2) the binary code
         (3) a vector of positions in which the code should be placed in the output array
@@ -223,7 +222,19 @@ void decompress_huffman_code(HuffmanNode* huffmanNode){
         pthread_join(tid[i], NULL);
     /*After threads mutate the output array,
     and are joined, the original message is printed after*/
-    std::cout << "Original message: " << convertToString(output, sizeof(output) / sizeof(char)) << std::endl;
+    std::cout << "Original message: " << convertToString(output, huffmanNode->freq) << std::endl;
+    delete[] output;
+}
+
+void delete_huffman_tree(HuffmanNode* root){
+     if (root == nullptr) {
+        return; // if the root is null, return immediately
+    }
+    // recursively delete the left and right subtrees
+    delete_huffman_tree(root->left);
+    delete_huffman_tree(root->right);
+    // delete the current node
+    delete root;
 }
 
 int main(){
@@ -236,5 +247,7 @@ int main(){
     print_huffman_tree(huffmanNodeVector[0]);
     //4. compressed file is decompressed using the codes of each character in the tree; implemented with POSIX threads
     decompress_huffman_code(huffmanNodeVector[0]);
+    //5. Delete memory allocated by all nodes in huffman tree
+    delete_huffman_tree(huffmanNodeVector[0]);
     return 0;
 }
